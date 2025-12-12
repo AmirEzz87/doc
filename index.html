@@ -143,13 +143,8 @@
     </div>
 
     <script>
-        // Replace with your actual Supabase project URL
-        // Get this from: Supabase Dashboard → Project Settings → API → Project URL
-        // Then add: /functions/v1/oauth-authorize
-        const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
-        
-        // TODO: Replace YOUR_PROJECT_REF with your actual project reference
-        // Example: https://abcdefghijk.supabase.co/functions/v1/oauth-authorize
+        // Supabase Edge Function URL for OAuth authorization
+        const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsfctcldzs.supabase.co/functions/v1/oauth-authorize';
         
         // Get OAuth parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -179,12 +174,22 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            // Debug: Log parameters
+            console.log('OAuth Parameters:', {
+                state: state,
+                clientId: clientId,
+                redirectUri: redirectUri,
+                edgeFunctionUrl: EDGE_FUNCTION_URL
+            });
+
             // Show loading
             form.style.display = 'none';
             loadingDiv.classList.add('show');
             submitBtn.disabled = true;
 
             try {
+                console.log('Sending request to:', EDGE_FUNCTION_URL);
+                
                 const response = await fetch(EDGE_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
@@ -199,27 +204,53 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
+                
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (response.ok && data.redirect_url) {
                     // Redirect to Alexa with auth code
+                    console.log('Redirecting to:', data.redirect_url);
                     window.location.href = data.redirect_url;
                 } else {
                     throw new Error(data.error || 'Authentication failed');
                 }
             } catch (error) {
                 // Show error
+                console.error('Error:', error);
                 form.style.display = 'block';
                 loadingDiv.classList.remove('show');
                 submitBtn.disabled = false;
-                showError(error.message || 'Invalid email or password. Please use your existing account credentials.');
+                
+                // Show detailed error message
+                let errorMessage = 'Failed to connect to authentication server. ';
+                if (error.message.includes('fetch')) {
+                    errorMessage += 'Please check that the Edge Function is deployed and accessible.';
+                } else {
+                    errorMessage += error.message;
+                }
+                showError(errorMessage);
             }
         });
 
-        // Validate OAuth parameters
+        // Validate OAuth parameters and show detailed info
+        console.log('Page loaded with parameters:', {
+            state: state,
+            clientId: clientId,
+            redirectUri: redirectUri,
+            responseType: responseType
+        });
+
         if (!state || !clientId || !redirectUri) {
-            showError('Invalid OAuth request. Please try linking your account again from the Alexa app.');
+            const missingParams = [];
+            if (!state) missingParams.push('state');
+            if (!clientId) missingParams.push('client_id');
+            if (!redirectUri) missingParams.push('redirect_uri');
+            
+            showError('Invalid OAuth request. Missing parameters: ' + missingParams.join(', ') + '. Please try linking your account again from the Alexa app.');
             submitBtn.disabled = true;
+            console.error('Missing OAuth parameters:', missingParams);
         }
     </script>
 </body>
