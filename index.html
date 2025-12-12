@@ -143,8 +143,13 @@
     </div>
 
     <script>
-        // TODO: Replace with your Supabase project URL
+        // Replace with your actual Supabase project URL
+        // Get this from: Supabase Dashboard → Project Settings → API → Project URL
+        // Then add: /functions/v1/oauth-authorize
         const EDGE_FUNCTION_URL = 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-authorize';
+        
+        // TODO: Replace YOUR_PROJECT_REF with your actual project reference
+        // Example: https://abcdefghijk.supabase.co/functions/v1/oauth-authorize
         
         // Get OAuth parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
