@@ -1,257 +1,396 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Your Smart Home with Alexa</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 100%;
-            padding: 40px;
-        }
-        h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        p {
-            color: #666;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            color: #333;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-        .error.show {
-            display: block;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .loading.show {
-            display: block;
-        }
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Your Smart Home with Alexa</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 420px;
+      width: 100%;
+      padding: 40px;
+    }
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    p {
+      color: #666;
+      text-align: center;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+    .input-group { margin-bottom: 16px; }
+    label {
+      display: block;
+      color: #333;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input:focus { outline: none; border-color: #667eea; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      color: #999;
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #eee;
+    }
+
+    .google-btn {
+      background: #111;
+      margin-bottom: 12px;
+    }
+    .google-btn:hover {
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+    }
+
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+      line-height: 1.35;
+    }
+    .error.show { display: block; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .loading.show { display: block; }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .hint {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      line-height: 1.35;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🏠 Link Your Smart Home</h1>
-        <p>Sign in with your existing account to control your devices with Alexa</p>
-        
-        <div id="error" class="error"></div>
-        
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required placeholder="your@email.com" autocomplete="email">
-            </div>
-            
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
-            </div>
-            
-            <button type="submit" id="submitBtn">Sign In & Link Account</button>
-        </form>
-        
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 10px; color: #666;">Authenticating...</p>
-        </div>
+  <div class="container">
+    <h1>🏠 Link Your Smart Home</h1>
+    <p>Sign in to control your devices with Alexa</p>
+
+    <div id="error" class="error"></div>
+
+    <!-- Google Sign-in -->
+    <button type="button" id="googleBtn" class="google-btn">
+      Continue with Google
+    </button>
+
+    <div class="divider">OR</div>
+
+    <!-- Email/Password Sign-in -->
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="submitBtn">Sign In & Link Account</button>
+    </form>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px; color: #666;">Authenticating...</p>
     </div>
 
-    <script>
-        // Supabase Edge Function URL for OAuth authorization
-        const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
-                                   
-        // Get OAuth parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const state = urlParams.get('state');
-        const clientId = urlParams.get('client_id');
-        const redirectUri = urlParams.get('redirect_uri');
-        const responseType = urlParams.get('response_type');
+    <div class="hint">
+      If Google linking fails, make sure your GitHub Pages URL is allowed in Supabase Auth redirect URLs
+      and Google provider is enabled in Supabase.
+    </div>
+  </div>
 
-        const form = document.getElementById('loginForm');
-        const errorDiv = document.getElementById('error');
-        const loadingDiv = document.getElementById('loading');
-        const submitBtn = document.getElementById('submitBtn');
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        function showError(message) {
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
+  <script>
+    /*****************************************************************
+     * CONFIG (YOU MUST SET THESE)
+     *****************************************************************/
+    const SUPABASE_URL = "https://mvmvqycvorstsftcldzs.supabase.co";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"; // <-- REQUIRED
 
-        function hideError() {
-            errorDiv.classList.remove('show');
-        }
+    // Your existing Edge Function that issues the Alexa redirect_url
+    // NOTE: This function must be updated server-side to accept `supabase_access_token`
+    // and treat it as "user is already authenticated via Google"
+    const EDGE_FUNCTION_URL = "https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize";
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideError();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    /*****************************************************************
+     * INIT
+     *****************************************************************/
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { flowType: "pkce" } // important for exchangeCodeForSession()
+    });
 
-            // Debug: Log parameters
-            console.log('OAuth Parameters:', {
-                state: state,
-                clientId: clientId,
-                redirectUri: redirectUri,
-                edgeFunctionUrl: EDGE_FUNCTION_URL
-            });
+    // Get OAuth parameters from URL (coming from Alexa)
+    const urlParams = new URLSearchParams(window.location.search);
+    const state = urlParams.get("state");
+    const clientId = urlParams.get("client_id");
+    const redirectUri = urlParams.get("redirect_uri");
+    const responseType = urlParams.get("response_type") || "code";
 
-            // Show loading
-            form.style.display = 'none';
-            loadingDiv.classList.add('show');
-            submitBtn.disabled = true;
+    const form = document.getElementById("loginForm");
+    const googleBtn = document.getElementById("googleBtn");
+    const errorDiv = document.getElementById("error");
+    const loadingDiv = document.getElementById("loading");
+    const submitBtn = document.getElementById("submitBtn");
 
-            try {
-                console.log('Sending request to:', EDGE_FUNCTION_URL);
-                
-                const response = await fetch(EDGE_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        state,
-                        client_id: clientId,
-                        redirect_uri: redirectUri
-                    })
-                });
+    function showError(message) {
+      errorDiv.textContent = message;
+      errorDiv.classList.add("show");
+    }
 
-                console.log('Response status:', response.status);
-                
-                const data = await response.json();
-                console.log('Response data:', data);
+    function hideError() {
+      errorDiv.classList.remove("show");
+    }
 
-                if (response.ok && data.redirect_url) {
-                    // Redirect to Alexa with auth code
-                    console.log('Redirecting to:', data.redirect_url);
-                    window.location.href = data.redirect_url;
-                } else {
-                    throw new Error(data.error || 'Authentication failed');
-                }
-            } catch (error) {
-                // Show error
-                console.error('Error:', error);
-                form.style.display = 'block';
-                loadingDiv.classList.remove('show');
-                submitBtn.disabled = false;
-                
-                // Show detailed error message
-                let errorMessage = 'Failed to connect to authentication server. ';
-                if (error.message.includes('fetch')) {
-                    errorMessage += 'Please check that the Edge Function is deployed and accessible.';
-                } else {
-                    errorMessage += error.message;
-                }
-                showError(errorMessage);
-            }
+    function showLoading() {
+      form.style.display = "none";
+      googleBtn.style.display = "none";
+      loadingDiv.classList.add("show");
+      submitBtn.disabled = true;
+      googleBtn.disabled = true;
+    }
+
+    function restoreUI() {
+      form.style.display = "block";
+      googleBtn.style.display = "block";
+      loadingDiv.classList.remove("show");
+      submitBtn.disabled = false;
+      googleBtn.disabled = false;
+    }
+
+    function validateAlexaParamsOrFail() {
+      if (!state || !clientId || !redirectUri) {
+        const missing = [];
+        if (!state) missing.push("state");
+        if (!clientId) missing.push("client_id");
+        if (!redirectUri) missing.push("redirect_uri");
+        showError(
+          "Invalid OAuth request. Missing parameters: " + missing.join(", ") +
+          ". Please try linking your account again from the Alexa app."
+        );
+        submitBtn.disabled = true;
+        googleBtn.disabled = true;
+        return false;
+      }
+      return true;
+    }
+
+    validateAlexaParamsOrFail();
+
+    /*****************************************************************
+     * GOOGLE SIGN-IN FLOW
+     *
+     * 1) User clicks "Continue with Google"
+     * 2) Supabase redirects to Google
+     * 3) Google returns to this page with ?code=...
+     * 4) We exchange code -> session (access_token)
+     * 5) We call Edge Function oauth-authorize with supabase_access_token + Alexa params
+     * 6) Edge returns redirect_url -> we redirect user to Alexa
+     *****************************************************************/
+    googleBtn.addEventListener("click", async () => {
+      hideError();
+      if (!validateAlexaParamsOrFail()) return;
+
+      try {
+        // Redirect back to THIS SAME PAGE, preserving Alexa params
+        const redirectTo =
+          window.location.origin +
+          window.location.pathname +
+          "?" +
+          new URLSearchParams({
+            state,
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            response_type: responseType
+          }).toString();
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo }
         });
 
-        // Validate OAuth parameters and show detailed info
-        console.log('Page loaded with parameters:', {
-            state: state,
-            clientId: clientId,
-            redirectUri: redirectUri,
-            responseType: responseType
+        if (error) throw error;
+      } catch (err) {
+        console.error("Google sign-in error:", err);
+        showError(err?.message || "Failed to start Google login.");
+      }
+    });
+
+    // If we returned from Google/Supabase, we'll have `code` in URL
+    (async function handleGoogleCallbackIfAny() {
+      const code = urlParams.get("code");
+      if (!code) return;
+
+      hideError();
+      if (!validateAlexaParamsOrFail()) return;
+
+      showLoading();
+
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) throw error;
+
+        const accessToken = data?.session?.access_token;
+        if (!accessToken) throw new Error("Missing Supabase access token after Google login.");
+
+        const response = await fetch(EDGE_FUNCTION_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            // NEW: token-based auth path (your Edge Function must support this)
+            supabase_access_token: accessToken,
+
+            // Alexa OAuth params
+            state,
+            client_id: clientId,
+            redirect_uri: redirectUri
+          })
         });
 
-        if (!state || !clientId || !redirectUri) {
-            const missingParams = [];
-            if (!state) missingParams.push('state');
-            if (!clientId) missingParams.push('client_id');
-            if (!redirectUri) missingParams.push('redirect_uri');
-            
-            showError('Invalid OAuth request. Missing parameters: ' + missingParams.join(', ') + '. Please try linking your account again from the Alexa app.');
-            submitBtn.disabled = true;
-            console.error('Missing OAuth parameters:', missingParams);
+        const payload = await response.json();
+
+        if (response.ok && payload.redirect_url) {
+          window.location.href = payload.redirect_url;
+          return;
         }
-    </script>
+
+        throw new Error(payload.error || "Google authentication succeeded, but linking failed.");
+      } catch (err) {
+        console.error("Google callback handling error:", err);
+        restoreUI();
+        showError(err?.message || "Google login failed.");
+      }
+    })();
+
+    /*****************************************************************
+     * EMAIL/PASSWORD FLOW (your existing flow, unchanged)
+     *****************************************************************/
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideError();
+      if (!validateAlexaParamsOrFail()) return;
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      showLoading();
+
+      try {
+        const response = await fetch(EDGE_FUNCTION_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            state,
+            client_id: clientId,
+            redirect_uri: redirectUri
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.redirect_url) {
+          window.location.href = data.redirect_url;
+        } else {
+          throw new Error(data.error || "Authentication failed");
+        }
+      } catch (err) {
+        console.error("Email/password error:", err);
+        restoreUI();
+
+        let msg = "Failed to connect to authentication server. ";
+        if ((err?.message || "").toLowerCase().includes("fetch")) {
+          msg += "Please check that the Edge Function is deployed and accessible.";
+        } else {
+          msg += (err?.message || "Unknown error");
+        }
+        showError(msg);
+      }
+    });
+
+    /*****************************************************************
+     * DEBUG LOGS (optional)
+     *****************************************************************/
+    console.log("Page loaded with parameters:", {
+      state, clientId, redirectUri, responseType
+    });
+  </script>
 </body>
 </html>
