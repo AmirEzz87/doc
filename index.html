@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Link Your Smart Home with Alexa</title>
 
     <style>
@@ -27,80 +27,19 @@
             padding: 40px;
         }
 
-        /* ===== BRANDING ===== */
+        /* ===== BRANDING (STATIC LOGO ONLY) ===== */
         .brand {
             text-align: center;
             margin-bottom: 25px;
         }
 
-        /* Wrap logo so we can overlay animated eyes */
-        .logo-wrap {
-            position: relative;
-            display: inline-block;
-            width: 160px;          /* controls logo display size */
+        .brand img {
+            width: 160px;
             max-width: 70%;
-        }
-
-        .logo-wrap img {
-            width: 100%;
             height: auto;
-            display: block;
+            display: inline-block;
             user-select: none;
             -webkit-user-drag: none;
-        }
-
-        /* Fake "robot eyes" overlay (two dots) */
-        .eyes {
-            position: absolute;
-            /* These values position eyes over your logo's robot face.
-               If you want perfect alignment, we can fine-tune later. */
-            left: 50%;
-            top: 56%;
-            transform: translate(-50%, -50%);
-            width: 46px;
-            height: 14px;
-            pointer-events: none;
-        }
-
-        .eye {
-            position: absolute;
-            top: 2px;
-            width: 8px;
-            height: 8px;
-            background: #0f5fa8;
-            border-radius: 999px;
-            transform-origin: center;
-        }
-
-        .eye.left { left: 10px; }
-        .eye.right { right: 10px; }
-
-        /* Blink: squish vertically + small pause */
-        @keyframes blink {
-            0%, 92%, 100% { transform: scaleY(1); }
-            94% { transform: scaleY(0.15); }
-            96% { transform: scaleY(1); }
-        }
-
-        /* Look: move both eyes slightly left-right */
-        @keyframes look {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-2px); }
-            50% { transform: translateX(2px); }
-            75% { transform: translateX(-1px); }
-        }
-
-        .eye {
-            animation: blink 3.8s infinite;
-        }
-
-        .eyes {
-            animation: look 5.2s infinite;
-        }
-
-        /* Respect users who disable motion */
-        @media (prefers-reduced-motion: reduce) {
-            .eye, .eyes { animation: none !important; }
         }
 
         h1 {
@@ -207,16 +146,9 @@
 <body>
     <div class="container">
 
-        <!-- BRAND HEADER (logo only) -->
+        <!-- BRAND HEADER (STATIC LOGO ONLY) -->
         <div class="brand">
-            <div class="logo-wrap" aria-label="HBOT">
-                <img src="hbot-logo.png" alt="HBOT Logo">
-                <!-- Animated eye overlay -->
-                <div class="eyes" aria-hidden="true">
-                    <div class="eye left"></div>
-                    <div class="eye right"></div>
-                </div>
-            </div>
+            <img src="hbot-logo.png" alt="HBOT Logo" />
         </div>
 
         <h1>Link Your Smart Home</h1>
@@ -227,15 +159,15 @@
         <form id="loginForm">
             <div class="input-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" required placeholder="you@email.com" autocomplete="email">
+                <input type="email" id="email" required placeholder="you@email.com" autocomplete="email" />
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+                <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
             </div>
 
-            <button type="submit" id="submitBtn">Sign In & Link Account</button>
+            <button type="submit" id="submitBtn">Sign In &amp; Link Account</button>
         </form>
 
         <div id="loading" class="loading">
