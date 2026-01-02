@@ -4,40 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Link Your Smart Home with Alexa</title>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
+
         .container {
-            background: white;
+            background: #ffffff;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
             max-width: 400px;
             width: 100%;
             padding: 40px;
         }
+
+        /* ===== BRANDING ===== */
+        .brand {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .brand img {
+            width: 90px;
+            margin-bottom: 10px;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f5fa8;
+            letter-spacing: 1px;
+        }
+
         h1 {
-            color: #333;
-            font-size: 24px;
+            color: #222;
+            font-size: 22px;
             margin-bottom: 10px;
             text-align: center;
         }
+
         p {
-            color: #666;
+            color: #555;
             text-align: center;
             margin-bottom: 30px;
             font-size: 14px;
         }
+
         .input-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             color: #333;
@@ -45,23 +74,26 @@
             font-weight: 500;
             margin-bottom: 8px;
         }
+
         input {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 15px;
             transition: border-color 0.3s;
         }
+
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0f5fa8;
         }
+
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
+            color: #fff;
             border: none;
             border-radius: 10px;
             font-size: 16px;
@@ -69,97 +101,112 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4);
         }
+
         button:active {
             transform: translateY(0);
         }
+
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
+
         .error {
-            background: #fee;
-            color: #c33;
+            background: #fdeaea;
+            color: #b00020;
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 14px;
             display: none;
+            text-align: center;
         }
+
         .error.show {
             display: block;
         }
+
         .loading {
             display: none;
             text-align: center;
             margin-top: 20px;
         }
+
         .loading.show {
             display: block;
         }
+
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #0f5fa8;
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>🏠 Link Your Smart Home</h1>
-        <p>Sign in with your existing account to control your devices with Alexa</p>
-        
+
+        <!-- BRAND HEADER -->
+        <div class="brand">
+            <img src="hbot-logo.png" alt="HBOT Logo">
+            <div class="brand-name">HBOT</div>
+        </div>
+
+        <h1>Link Your Smart Home</h1>
+        <p>Sign in to connect your HBOT account with Alexa</p>
+
         <div id="error" class="error"></div>
-        
+
         <form id="loginForm">
             <div class="input-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required placeholder="your@email.com" autocomplete="email">
+                <input type="email" id="email" required placeholder="you@email.com" autocomplete="email">
             </div>
-            
+
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+                <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
             </div>
-            
+
             <button type="submit" id="submitBtn">Sign In & Link Account</button>
         </form>
-        
+
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p style="margin-top: 10px; color: #666;">Authenticating...</p>
+            <p style="margin-top: 10px; color: #555;">Authenticating…</p>
         </div>
     </div>
 
     <script>
-        // Supabase Edge Function URL for OAuth authorization
         const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
-                                   
-        // Get OAuth parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const state = urlParams.get('state');
-        const clientId = urlParams.get('client_id');
-        const redirectUri = urlParams.get('redirect_uri');
-        const responseType = urlParams.get('response_type');
+
+        const params = new URLSearchParams(window.location.search);
+        const state = params.get('state');
+        const clientId = params.get('client_id');
+        const redirectUri = params.get('redirect_uri');
 
         const form = document.getElementById('loginForm');
         const errorDiv = document.getElementById('error');
         const loadingDiv = document.getElementById('loading');
         const submitBtn = document.getElementById('submitBtn');
 
-        function showError(message) {
-            errorDiv.textContent = message;
+        function showError(msg) {
+            errorDiv.textContent = msg;
             errorDiv.classList.add('show');
         }
 
@@ -170,87 +217,42 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideError();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
 
-            // Debug: Log parameters
-            console.log('OAuth Parameters:', {
-                state: state,
-                clientId: clientId,
-                redirectUri: redirectUri,
-                edgeFunctionUrl: EDGE_FUNCTION_URL
-            });
-
-            // Show loading
             form.style.display = 'none';
             loadingDiv.classList.add('show');
             submitBtn.disabled = true;
 
             try {
-                console.log('Sending request to:', EDGE_FUNCTION_URL);
-                
-                const response = await fetch(EDGE_FUNCTION_URL, {
+                const res = await fetch(EDGE_FUNCTION_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        email,
-                        password,
+                        email: email.value,
+                        password: password.value,
                         state,
                         client_id: clientId,
                         redirect_uri: redirectUri
                     })
                 });
 
-                console.log('Response status:', response.status);
-                
-                const data = await response.json();
-                console.log('Response data:', data);
+                const data = await res.json();
 
-                if (response.ok && data.redirect_url) {
-                    // Redirect to Alexa with auth code
-                    console.log('Redirecting to:', data.redirect_url);
+                if (res.ok && data.redirect_url) {
                     window.location.href = data.redirect_url;
                 } else {
                     throw new Error(data.error || 'Authentication failed');
                 }
-            } catch (error) {
-                // Show error
-                console.error('Error:', error);
+            } catch (err) {
                 form.style.display = 'block';
                 loadingDiv.classList.remove('show');
                 submitBtn.disabled = false;
-                
-                // Show detailed error message
-                let errorMessage = 'Failed to connect to authentication server. ';
-                if (error.message.includes('fetch')) {
-                    errorMessage += 'Please check that the Edge Function is deployed and accessible.';
-                } else {
-                    errorMessage += error.message;
-                }
-                showError(errorMessage);
+                showError('Failed to connect to authentication server.');
             }
         });
 
-        // Validate OAuth parameters and show detailed info
-        console.log('Page loaded with parameters:', {
-            state: state,
-            clientId: clientId,
-            redirectUri: redirectUri,
-            responseType: responseType
-        });
-
         if (!state || !clientId || !redirectUri) {
-            const missingParams = [];
-            if (!state) missingParams.push('state');
-            if (!clientId) missingParams.push('client_id');
-            if (!redirectUri) missingParams.push('redirect_uri');
-            
-            showError('Invalid OAuth request. Missing parameters: ' + missingParams.join(', ') + '. Please try linking your account again from the Alexa app.');
+            showError('Invalid OAuth request. Please start linking from the Alexa app.');
             submitBtn.disabled = true;
-            console.error('Missing OAuth parameters:', missingParams);
         }
     </script>
 </body>
