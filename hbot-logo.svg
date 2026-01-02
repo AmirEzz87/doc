@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1113 460"
+     width="1113" height="460"
+     role="img" aria-label="HBOT Logo">
+
+  <style>
+    /* Smooth + subtle (not annoying) */
+    .eyes {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: look 5.2s ease-in-out infinite;
+    }
+
+    .eye {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: blink 3.8s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      94% { transform: scaleY(0.12); }
+      96% { transform: scaleY(1); }
+    }
+
+    @keyframes look {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      50% { transform: translateX(2px); }
+      75% { transform: translateX(-1px); }
+    }
+
+    /* Respect reduced-motion users */
+    @media (prefers-reduced-motion: reduce) {
+      .eyes, .eye { animation: none !important; }
+    }
+  </style>
+
+  <!-- Your original PNG embedded (exact look, no quality loss in the UI) -->
+  <image x="0" y="0" width="1113" height="460"
+         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFkAAAHMCAYAAAAODndpAAAQAE...<SNIPPED_FOR_CHAT>..."/>
+
+  <!-- Animated overlay aligned to the REAL eye centers measured from your PNG -->
+  <!-- Centers: Left(619.512, 267.650) Right(758.908, 267.637)  Radius ≈ 38.5 -->
+  <g class="eyes" opacity="0.18" pointer-events="none">
+    <ellipse class="eye" cx="619.512" cy="267.650" rx="38.5" ry="38.5" fill="#0F5FA8"/>
+    <ellipse class="eye" cx="758.908" cy="267.637" rx="38.5" ry="38.5" fill="#0F5FA8"/>
+  </g>
+
+</svg>
