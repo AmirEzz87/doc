@@ -107,7 +107,7 @@
       cursor: not-allowed;
     }
 
-    /* Google button (keeps layout clean, doesn't change page shape) */
+    /* Google button */
     .google-btn {
       width: 100%;
       padding: 14px;
@@ -200,7 +200,6 @@
 <body>
   <div class="container">
 
-    <!-- BRAND HEADER (STATIC LOGO ONLY) -->
     <div class="brand">
       <img src="hbot-logo.png" alt="HBOT Logo" />
     </div>
@@ -213,7 +212,6 @@
     <form id="loginForm">
       <!-- Google login -->
       <button type="button" id="googleBtn" class="google-btn">
-        <!-- Simple Google "G" mark (inline SVG) -->
         <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6.1C12.3 13.5 17.7 9.5 24 9.5z"/>
           <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-2.8-.4-4.1H24v7.8h12.6c-.3 2-1.7 5-4.9 7l7.6 5.9c4.4-4 6.8-10 6.8-16.6z"/>
@@ -225,7 +223,6 @@
 
       <div class="divider">or</div>
 
-      <!-- Email/Password login -->
       <div class="input-group">
         <label for="email">Email</label>
         <input type="email" id="email" required placeholder="you@email.com" autocomplete="email" />
@@ -248,12 +245,8 @@
   <script>
     const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
 
-    // Supabase + Google start edge function (we will create in the next step)
     const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
     const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
-
-    // Your GitHub Pages login URL (must be exact)
-    const LOGIN_PAGE_URL = 'https://amirezz87.github.io/doc/';
 
     const params = new URLSearchParams(window.location.search);
     const state = params.get('state');
@@ -289,7 +282,7 @@
       }
     }
 
-    // Google login click → redirects to our edge function, which redirects to Google OAuth
+    // Google login click → redirects to edge function → Google OAuth
     googleBtn.addEventListener('click', () => {
       hideError();
 
@@ -302,12 +295,11 @@
       u.searchParams.set('state', state);
       u.searchParams.set('client_id', clientId);
       u.searchParams.set('redirect_uri', redirectUri);
-      u.searchParams.set('login_page', LOGIN_PAGE_URL);
 
       window.location.href = u.toString();
     });
 
-    // Email/password login (existing flow)
+    // Email/password login
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
