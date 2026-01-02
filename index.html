@@ -6,11 +6,7 @@
     <title>Link Your Smart Home with Alexa</title>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -37,16 +33,74 @@
             margin-bottom: 25px;
         }
 
-        .brand img {
-            width: 90px;
-            margin-bottom: 10px;
+        /* Wrap logo so we can overlay animated eyes */
+        .logo-wrap {
+            position: relative;
+            display: inline-block;
+            width: 160px;          /* controls logo display size */
+            max-width: 70%;
         }
 
-        .brand-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #0f5fa8;
-            letter-spacing: 1px;
+        .logo-wrap img {
+            width: 100%;
+            height: auto;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Fake "robot eyes" overlay (two dots) */
+        .eyes {
+            position: absolute;
+            /* These values position eyes over your logo's robot face.
+               If you want perfect alignment, we can fine-tune later. */
+            left: 50%;
+            top: 56%;
+            transform: translate(-50%, -50%);
+            width: 46px;
+            height: 14px;
+            pointer-events: none;
+        }
+
+        .eye {
+            position: absolute;
+            top: 2px;
+            width: 8px;
+            height: 8px;
+            background: #0f5fa8;
+            border-radius: 999px;
+            transform-origin: center;
+        }
+
+        .eye.left { left: 10px; }
+        .eye.right { right: 10px; }
+
+        /* Blink: squish vertically + small pause */
+        @keyframes blink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            94% { transform: scaleY(0.15); }
+            96% { transform: scaleY(1); }
+        }
+
+        /* Look: move both eyes slightly left-right */
+        @keyframes look {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-1px); }
+        }
+
+        .eye {
+            animation: blink 3.8s infinite;
+        }
+
+        .eyes {
+            animation: look 5.2s infinite;
+        }
+
+        /* Respect users who disable motion */
+        @media (prefers-reduced-motion: reduce) {
+            .eye, .eyes { animation: none !important; }
         }
 
         h1 {
@@ -63,9 +117,7 @@
             font-size: 14px;
         }
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+        .input-group { margin-bottom: 20px; }
 
         label {
             display: block;
@@ -107,9 +159,7 @@
             box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
+        button:active { transform: translateY(0); }
 
         button:disabled {
             opacity: 0.6;
@@ -127,9 +177,7 @@
             text-align: center;
         }
 
-        .error.show {
-            display: block;
-        }
+        .error.show { display: block; }
 
         .loading {
             display: none;
@@ -137,9 +185,7 @@
             margin-top: 20px;
         }
 
-        .loading.show {
-            display: block;
-        }
+        .loading.show { display: block; }
 
         .spinner {
             border: 3px solid #f3f3f3;
@@ -161,10 +207,16 @@
 <body>
     <div class="container">
 
-        <!-- BRAND HEADER -->
+        <!-- BRAND HEADER (logo only) -->
         <div class="brand">
-            <img src="hbot-logo.png" alt="HBOT Logo">
-            <div class="brand-name">HBOT</div>
+            <div class="logo-wrap" aria-label="HBOT">
+                <img src="hbot-logo.png" alt="HBOT Logo">
+                <!-- Animated eye overlay -->
+                <div class="eyes" aria-hidden="true">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                </div>
+            </div>
         </div>
 
         <h1>Link Your Smart Home</h1>
