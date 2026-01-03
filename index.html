@@ -1,409 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Link Your Smart Home with Alexa</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Link Your Smart Home with Alexa</title>
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-    .container {
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-      max-width: 400px;
-      width: 100%;
-      padding: 40px;
-    }
+        .container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+        }
 
-    .brand { text-align: center; margin-bottom: 18px; }
-    .brand img {
-      width: 160px;
-      max-width: 70%;
-      height: auto;
-      display: inline-block;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
+        /* ===== BRANDING (STATIC LOGO ONLY) ===== */
+        .brand {
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
-    h1 { color: #222; font-size: 22px; margin-bottom: 10px; text-align: center; }
-    p  { color: #555; text-align: center; margin-bottom: 18px; font-size: 14px; }
+        .brand img {
+            width: 160px;
+            max-width: 70%;
+            height: auto;
+            display: inline-block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
 
-    .status {
-      font-size: 12px;
-      color: #0f5fa8;
-      background: #eef6ff;
-      border: 1px solid #d6e9ff;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      text-align: center;
-      white-space: pre-wrap;
-    }
+        h1 {
+            color: #222;
+            font-size: 22px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
 
-    .input-group { margin-bottom: 20px; }
-    label { display: block; color: #333; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        p {
+            color: #555;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
 
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 15px;
-      transition: border-color 0.3s;
-    }
-    input:focus { outline: none; border-color: #0f5fa8; }
+        .input-group { margin-bottom: 20px; }
 
-    button.primary-btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    button.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4); }
-    button.primary-btn:active { transform: translateY(0); }
+        label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
 
-    .google-btn {
-      width: 100%;
-      padding: 14px;
-      background: #ffffff;
-      color: #222;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-      margin-bottom: 14px;
-    }
-    .google-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #cfcfcf; }
-    .google-btn:active { transform: translateY(0); }
-    .google-icon { width: 18px; height: 18px; display: inline-block; }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
 
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 8px 0 18px;
-      color: #777;
-      font-size: 12px;
-      user-select: none;
-    }
-    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #e9e9e9; }
+        input:focus {
+            outline: none;
+            border-color: #0f5fa8;
+        }
 
-    .error {
-      background: #fdeaea;
-      color: #b00020;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 14px;
-      font-size: 14px;
-      display: none;
-      text-align: center;
-      white-space: pre-wrap;
-    }
-    .error.show { display: block; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
 
-    .loading { display: none; text-align: center; margin-top: 18px; }
-    .loading.show { display: block; }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4);
+        }
 
-    .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #0f5fa8;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        button:active { transform: translateY(0); }
 
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-  </style>
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-  <!-- Supabase UMD -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        .error {
+            background: #fdeaea;
+            color: #b00020;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+
+        .error.show { display: block; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show { display: block; }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0f5fa8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="brand">
-      <img src="hbot-logo.png" alt="HBOT Logo" />
+    <div class="container">
+
+        <!-- BRAND HEADER (STATIC LOGO ONLY) -->
+        <div class="brand">
+            <img src="hbot-logo.png" alt="HBOT Logo" />
+        </div>
+
+        <h1>Link Your Smart Home</h1>
+        <p>Sign in to connect your HBOT account with Alexa</p>
+
+        <div id="error" class="error"></div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required placeholder="you@email.com" autocomplete="email" />
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
+            </div>
+
+            <button type="submit" id="submitBtn">Sign In &amp; Link Account</button>
+        </form>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #555;">Authenticating…</p>
+        </div>
     </div>
 
-    <h1>Link Your Smart Home</h1>
-    <p>Sign in to connect your HBOT account with Alexa</p>
+    <script>
+        const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
 
-    <div id="status" class="status">Loading…</div>
-    <div id="error" class="error"></div>
+        const params = new URLSearchParams(window.location.search);
+        const state = params.get('state');
+        const clientId = params.get('client_id');
+        const redirectUri = params.get('redirect_uri');
 
-    <form id="loginForm">
-      <button type="button" id="googleBtn" class="google-btn">
-        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6.1C12.3 13.5 17.7 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-2.8-.4-4.1H24v7.8h12.6c-.3 2-1.7 5-4.9 7l7.6 5.9c4.4-4 6.8-10 6.8-16.6z"/>
-          <path fill="#FBBC05" d="M10.4 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.8-6.1C.9 16.7 0 20.2 0 24c0 3.8.9 7.3 2.6 10.7l7.8-6.1z"/>
-          <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.6-5.9c-2 1.4-4.7 2.4-7.6 2.4-6.3 0-11.7-4-13.6-9.9l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/>
-        </svg>
-        Continue with Google
-      </button>
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
 
-      <div class="divider">or</div>
+        function showError(msg) {
+            errorDiv.textContent = msg;
+            errorDiv.classList.add('show');
+        }
 
-      <div class="input-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required placeholder="you@email.com" autocomplete="email" />
-      </div>
+        function hideError() {
+            errorDiv.classList.remove('show');
+        }
 
-      <div class="input-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
-      </div>
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
 
-      <button type="submit" id="submitBtn" class="primary-btn">Sign In &amp; Link Account</button>
-    </form>
+            form.style.display = 'none';
+            loadingDiv.classList.add('show');
+            submitBtn.disabled = true;
 
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p style="margin-top: 10px; color: #555;">Authenticating…</p>
-    </div>
-  </div>
+            try {
+                const res = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email.value,
+                        password: password.value,
+                        state,
+                        client_id: clientId,
+                        redirect_uri: redirectUri
+                    })
+                });
 
-  <script>
-    // ====== CONFIG ======
-    const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI'; // <-- MUST replace
+                const data = await res.json();
 
-    const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
-    const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
-
-    const LOGIN_PAGE_URL = 'https://amirezz87.github.io/doc/';
-
-    // ====== UI ======
-    const statusDiv = document.getElementById('status');
-    const errorDiv  = document.getElementById('error');
-    const form      = document.getElementById('loginForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const googleBtn = document.getElementById('googleBtn');
-    const loadingDiv= document.getElementById('loading');
-
-    function showError(msg) {
-      errorDiv.textContent = msg;
-      errorDiv.classList.add('show');
-    }
-    function hideError() { errorDiv.classList.remove('show'); }
-    function setLoading(isLoading) {
-      if (isLoading) {
-        form.style.display = 'none';
-        loadingDiv.classList.add('show');
-        submitBtn.disabled = true;
-        googleBtn.disabled = true;
-      } else {
-        form.style.display = 'block';
-        loadingDiv.classList.remove('show');
-        submitBtn.disabled = false;
-        googleBtn.disabled = false;
-      }
-    }
-
-    // ====== URL params from Alexa ======
-    const params = new URLSearchParams(window.location.search);
-    const state = params.get('state');
-    const clientId = params.get('client_id');
-    const redirectUri = params.get('redirect_uri');
-    const code = params.get('code'); // from Supabase OAuth callback
-
-    // Show live status to stop guessing
-    statusDiv.textContent =
-      `state: ${state ? '✅' : '❌'}\n` +
-      `client_id: ${clientId ? '✅' : '❌'}\n` +
-      `redirect_uri: ${redirectUri ? '✅' : '❌'}\n` +
-      `supabase_code: ${code ? '✅' : '—'}`;
-
-    // ====== Supabase existence check ======
-    if (!window.supabase || !window.supabase.createClient) {
-      showError('Supabase JS failed to load. (CDN blocked in WebView)\nTry opening in Chrome, or host supabase-js locally.');
-      submitBtn.disabled = true;
-      googleBtn.disabled = true;
-      throw new Error('Supabase JS not loaded');
-    }
-
-    // ====== Create Supabase client ======
-    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('PASTE_')) {
-      showError('You did not paste SUPABASE_ANON_KEY in the HTML.');
-      submitBtn.disabled = true;
-      googleBtn.disabled = true;
-      throw new Error('Missing SUPABASE_ANON_KEY');
-    }
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
-
-    function hasAlexaParams() {
-      return !!(state && clientId && redirectUri);
-    }
-
-    // ====== GOOGLE LOGIN START ======
-    googleBtn.addEventListener('click', async () => {
-      hideError();
-
-      if (!hasAlexaParams()) {
-        showError(
-          'Missing Alexa OAuth params in URL.\n' +
-          'This page MUST be opened by Alexa account-linking.\n' +
-          'If you opened it manually, buttons won’t work.'
-        );
-        return;
-      }
-
-      // Preserve Alexa params inside redirectTo
-      const redirectTo =
-        `${LOGIN_PAGE_URL}?state=${encodeURIComponent(state)}` +
-        `&client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo }
+                if (res.ok && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error(data.error || 'Authentication failed');
+                }
+            } catch (err) {
+                form.style.display = 'block';
+                loadingDiv.classList.remove('show');
+                submitBtn.disabled = false;
+                showError('Failed to connect to authentication server.');
+            }
         });
 
-        if (error) {
-          showError('Google start failed:\n' + error.message);
-          return;
+        if (!state || !clientId || !redirectUri) {
+            showError('Invalid OAuth request. Please start linking from the Alexa app.');
+            submitBtn.disabled = true;
         }
-
-        if (data?.url) window.location.href = data.url;
-
-      } catch (e) {
-        showError('Google start exception:\n' + (e?.message || e));
-      }
-    });
-
-    // ====== HANDLE RETURN FROM GOOGLE ======
-    async function handleGoogleReturn() {
-      if (!code) return; // not coming back from supabase oauth
-
-      hideError();
-
-      if (!hasAlexaParams()) {
-        showError(
-          'Returned from Google, but Alexa params are missing.\n' +
-          'Your redirectTo is wrong OR Alexa did not pass params.'
-        );
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error || !data?.session?.access_token) {
-          throw new Error(error?.message || 'Failed to exchange code for session.');
-        }
-
-        const accessToken = data.session.access_token;
-
-        // Mint Alexa auth code for the logged-in Supabase user
-        const res = await fetch(GOOGLE_AUTHORIZE_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
-          body: JSON.stringify({
-            state,
-            client_id: clientId,
-            redirect_uri: redirectUri
-          })
-        });
-
-        const text = await res.text();
-        let out;
-        try { out = JSON.parse(text); } catch { out = { raw: text }; }
-
-        if (!res.ok || !out.redirect_url) {
-          throw new Error('oauth-authorize-google failed:\n' + (out.error || out.raw || res.status));
-        }
-
-        window.location.href = out.redirect_url;
-
-      } catch (e) {
-        setLoading(false);
-        showError(e?.message || String(e));
-      }
-    }
-
-    handleGoogleReturn();
-
-    // ====== EMAIL/PASSWORD LOGIN ======
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideError();
-
-      if (!hasAlexaParams()) {
-        showError(
-          'Missing Alexa OAuth params in URL.\n' +
-          'This page MUST be opened by Alexa account-linking.'
-        );
-        return;
-      }
-
-      const emailEl = document.getElementById('email');
-      const passEl = document.getElementById('password');
-
-      setLoading(true);
-
-      try {
-        const res = await fetch(EDGE_FUNCTION_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: emailEl.value,
-            password: passEl.value,
-            state,
-            client_id: clientId,
-            redirect_uri: redirectUri
-          })
-        });
-
-        const text = await res.text();
-        let data;
-        try { data = JSON.parse(text); } catch { data = { raw: text }; }
-
-        if (!res.ok || !data.redirect_url) {
-          throw new Error('oauth-authorize failed:\n' + (data.error || data.raw || res.status));
-        }
-
-        window.location.href = data.redirect_url;
-
-      } catch (err) {
-        setLoading(false);
-        showError(err?.message || 'Login failed.');
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
