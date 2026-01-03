@@ -27,12 +27,7 @@
       padding: 40px;
     }
 
-    /* ===== BRANDING (STATIC LOGO ONLY) ===== */
-    .brand {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
+    .brand { text-align: center; margin-bottom: 25px; }
     .brand img {
       width: 160px;
       max-width: 70%;
@@ -80,7 +75,6 @@
       border-color: #0f5fa8;
     }
 
-    /* Primary button (Sign In) */
     button.primary-btn {
       width: 100%;
       padding: 14px;
@@ -107,7 +101,6 @@
       cursor: not-allowed;
     }
 
-    /* Google button */
     .google-btn {
       width: 100%;
       padding: 14px;
@@ -134,13 +127,8 @@
 
     .google-btn:active { transform: translateY(0); }
 
-    .google-icon {
-      width: 18px;
-      height: 18px;
-      display: inline-block;
-    }
+    .google-icon { width: 18px; height: 18px; display: inline-block; }
 
-    /* Divider */
     .divider {
       display: flex;
       align-items: center;
@@ -151,8 +139,7 @@
       user-select: none;
     }
 
-    .divider::before,
-    .divider::after {
+    .divider::before, .divider::after {
       content: "";
       flex: 1;
       height: 1px;
@@ -168,8 +155,8 @@
       font-size: 14px;
       display: none;
       text-align: center;
+      white-space: pre-wrap;
     }
-
     .error.show { display: block; }
 
     .loading {
@@ -177,7 +164,6 @@
       text-align: center;
       margin-top: 20px;
     }
-
     .loading.show { display: block; }
 
     .spinner {
@@ -195,11 +181,13 @@
       100% { transform: rotate(360deg); }
     }
   </style>
+
+  <!-- Supabase JS (browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
   <div class="container">
-
     <div class="brand">
       <img src="hbot-logo.png" alt="HBOT Logo" />
     </div>
@@ -210,7 +198,6 @@
     <div id="error" class="error"></div>
 
     <form id="loginForm">
-      <!-- Google login -->
       <button type="button" id="googleBtn" class="google-btn">
         <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6.1C12.3 13.5 17.7 9.5 24 9.5z"/>
@@ -243,16 +230,20 @@
   </div>
 
   <script>
-    const EDGE_FUNCTION_URL = 'https://mvmvqycvorstsftcldzs.supabase.co/functions/v1/oauth-authorize';
-
+    // ====== CONFIG ======
     const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
-    const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI'; // <-- REQUIRED
 
-    const params = new URLSearchParams(window.location.search);
-    const state = params.get('state');
-    const clientId = params.get('client_id');
-    const redirectUri = params.get('redirect_uri');
+    // Your existing email/password authorize edge function
+    const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
 
+    // New edge function we'll use after Google login (you must deploy it)
+    const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
+
+    // Your login page URL (must match your GitHub Pages URL exactly)
+    const LOGIN_PAGE_URL = 'https://amirezz87.github.io/doc/';
+
+    // ====== UI ======
     const form = document.getElementById('loginForm');
     const errorDiv = document.getElementById('error');
     const loadingDiv = document.getElementById('loading');
@@ -263,11 +254,9 @@
       errorDiv.textContent = msg;
       errorDiv.classList.add('show');
     }
-
     function hideError() {
       errorDiv.classList.remove('show');
     }
-
     function setLoading(isLoading) {
       if (isLoading) {
         form.style.display = 'none';
@@ -282,27 +271,112 @@
       }
     }
 
-    // Google login click → redirects to edge function → Google OAuth
-    googleBtn.addEventListener('click', () => {
-      hideError();
+    // ====== OAuth params from Alexa ======
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get('state');
+    const clientId = params.get('client_id');
+    const redirectUri = params.get('redirect_uri');
 
+    // ====== Supabase client ======
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
+
+    function requireAlexaParamsOrFail() {
       if (!state || !clientId || !redirectUri) {
         showError('Invalid OAuth request. Please start linking from the Alexa app.');
+        submitBtn.disabled = true;
+        googleBtn.disabled = true;
+        return false;
+      }
+      return true;
+    }
+
+    // ====== GOOGLE LOGIN START ======
+    googleBtn.addEventListener('click', async () => {
+      hideError();
+      if (!requireAlexaParamsOrFail()) return;
+
+      // IMPORTANT: Preserve Alexa params inside redirectTo so after Google we still have them.
+      const redirectTo = `${LOGIN_PAGE_URL}?state=${encodeURIComponent(state)}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo }
+      });
+
+      if (error) {
+        showError(`Google login failed: ${error.message}`);
         return;
       }
 
-      const u = new URL(GOOGLE_START_URL);
-      u.searchParams.set('state', state);
-      u.searchParams.set('client_id', clientId);
-      u.searchParams.set('redirect_uri', redirectUri);
-
-      window.location.href = u.toString();
+      // Supabase will redirect automatically. This line is usually not needed,
+      // but keeping it for safety if WebView blocks auto-redirect.
+      if (data?.url) window.location.href = data.url;
     });
 
-    // Email/password login
+    // ====== ON RETURN FROM GOOGLE ======
+    // Supabase returns a "code" query param which must be exchanged for a session.
+    async function handleSupabaseOAuthReturnIfAny() {
+      // If we have a "code" parameter, we're returning from Supabase OAuth.
+      const code = params.get('code');
+      if (!code) return;
+
+      hideError();
+
+      if (!requireAlexaParamsOrFail()) {
+        // We returned from Google without Alexa params => cannot finish linking.
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error || !data?.session?.access_token) {
+          throw new Error(error?.message || 'Failed to create session from Google login.');
+        }
+
+        // Now call your server to mint Alexa auth code for this Supabase user.
+        const res = await fetch(GOOGLE_AUTHORIZE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({
+            state,
+            client_id: clientId,
+            redirect_uri: redirectUri
+          })
+        });
+
+        const out = await res.json();
+
+        if (!res.ok || !out.redirect_url) {
+          throw new Error(out.error || `Google authorize failed (${res.status})`);
+        }
+
+        // Redirect back to Alexa with ?code=...&state=...
+        window.location.href = out.redirect_url;
+
+      } catch (e) {
+        setLoading(false);
+        showError(String(e.message || e));
+      }
+    }
+
+    // ====== EMAIL/PASSWORD FLOW ======
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
+      if (!requireAlexaParamsOrFail()) return;
+
+      const emailEl = document.getElementById('email');
+      const passEl = document.getElementById('password');
 
       setLoading(true);
 
@@ -311,8 +385,8 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: email.value,
-            password: password.value,
+            email: emailEl.value,
+            password: passEl.value,
             state,
             client_id: clientId,
             redirect_uri: redirectUri
@@ -328,16 +402,13 @@
         }
       } catch (err) {
         setLoading(false);
-        showError('Failed to connect to authentication server.');
+        showError(err?.message || 'Failed to connect to authentication server.');
       }
     });
 
-    // Guard for missing OAuth params
-    if (!state || !clientId || !redirectUri) {
-      showError('Invalid OAuth request. Please start linking from the Alexa app.');
-      submitBtn.disabled = true;
-      googleBtn.disabled = true;
-    }
+    // Guard for missing OAuth params + handle Google return
+    requireAlexaParamsOrFail();
+    handleSupabaseOAuthReturnIfAny();
   </script>
 </body>
 </html>
