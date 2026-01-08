@@ -196,9 +196,14 @@
     </div>
   </div>
 
+  <!-- ✅ Step 1: Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // ====== ENDPOINTS ======
+  // ====== CHANGE THESE 2 VALUES ONLY ======
   const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI';
+  // =======================================
 
   // Email+password -> your existing edge function
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
@@ -208,6 +213,15 @@
 
   // Google finish -> edge function that creates Alexa auth code
   const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
+
+  // ✅ Supabase client (used ONLY to exchange ?code=... into a session)
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 
   // ====== UI ======
   const form = document.getElementById('loginForm');
@@ -265,8 +279,7 @@
     }
   }
 
-  // ✅ IMPORTANT FIX:
-  // Supabase may return "state" in QUERY OR in HASH.
+  // Supabase may return Alexa "state" in QUERY OR in HASH.
   function getAlexaParamsFromUrl() {
     const q = new URLSearchParams(window.location.search);
     const h = parseHashParams();
@@ -317,12 +330,15 @@
   // ====== MAIN ======
   const alexa = getAlexaParamsFromUrl();
   const hash = parseHashParams();
+  const q = new URLSearchParams(window.location.search);
 
-  // 1) If we returned from Google, Supabase gives access_token in hash
+  // ✅ Google return handler supports BOTH:
+  // - implicit: #access_token=...
+  // - pkce: ?code=...
   (async function handleGoogleReturnIfAny() {
-    const accessToken = hash['access_token'];
-    const err = hash['error'];
-    const errDesc = hash['error_description'];
+    // errors may come in query or hash
+    const err = q.get('error') || hash['error'];
+    const errDesc = q.get('error_description') || hash['error_description'];
 
     if (err) {
       showError(`Google sign-in failed: ${errDesc || err}`);
@@ -330,75 +346,102 @@
       return;
     }
 
-    // If we have access_token, finish linking
-    if (accessToken) {
-      const alexaAfter = getAlexaParamsFromUrl(); // re-check (now includes hash state)
+    // 1) Old implicit flow (access_token in hash)
+    let accessToken = hash['access_token'];
 
-      if (!alexaAfter) {
-        showError('OAuth context missing after Google sign-in (state/client_id/redirect_uri).');
-        cleanUrlHash();
-        return;
-      }
-
-      setLoading(true, 'Finishing Google link…');
+    // 2) PKCE flow (code in query)
+    const code = q.get('code');
+    if (!accessToken && code) {
+      setLoading(true, 'Completing Google sign-in…');
       hideError();
-
       try {
-        const res = await fetch(GOOGLE_AUTHORIZE_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            state: alexaAfter.alexa_state,
-            client_id: alexaAfter.client_id,
-            redirect_uri: alexaAfter.redirect_uri
-          })
-        });
+        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        if (error) throw error;
 
-        const data = await res.json().catch(() => ({}));
+        accessToken = data?.session?.access_token;
+        if (!accessToken) throw new Error('No access token returned from Supabase session.');
 
-        if (!res.ok) {
-          throw new Error(data.error || `Google authorize failed (${res.status})`);
-        }
-        if (!data.redirect_url) {
-          throw new Error('Missing redirect_url from oauth-authorize-google');
-        }
-
-        cleanUrlHash();
-        window.location.href = data.redirect_url;
+        // Clean URL (remove ?code=...) to keep parsing stable
+        window.history.replaceState({}, document.title, window.location.pathname);
       } catch (e) {
         setLoading(false);
-        showError(String(e?.message || e));
-        cleanUrlHash();
+        showError(`Google sign-in exchange failed: ${e?.message || e}`);
+        return;
       }
+    }
+
+    // If no access token => nothing to finish
+    if (!accessToken) return;
+
+    // Now we must have Alexa params (packed_state or direct query)
+    const alexaAfter = getAlexaParamsFromUrl();
+    if (!alexaAfter) {
+      setLoading(false);
+      showError('OAuth context missing after Google sign-in (state/client_id/redirect_uri).');
+      cleanUrlHash();
+      return;
+    }
+
+    setLoading(true, 'Finishing Google link…');
+    hideError();
+
+    try {
+      const res = await fetch(GOOGLE_AUTHORIZE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          state: alexaAfter.alexa_state,
+          client_id: alexaAfter.client_id,
+          redirect_uri: alexaAfter.redirect_uri
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || `Google authorize failed (${res.status})`);
+      }
+      if (!data.redirect_url) {
+        throw new Error('Missing redirect_url from oauth-authorize-google');
+      }
+
+      cleanUrlHash();
+      window.location.href = data.redirect_url;
+    } catch (e) {
+      setLoading(false);
+      showError(String(e?.message || e));
+      cleanUrlHash();
     }
   })();
 
-  // 2) Google button click -> start google flow
+  // Google button click -> start google flow
   googleBtn.addEventListener('click', () => {
     hideError();
 
-    if (!alexa) {
+    const alexaNow = getAlexaParamsFromUrl();
+    if (!alexaNow) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
     }
 
     const u = new URL(GOOGLE_START_URL);
-    u.searchParams.set('state', alexa.alexa_state);
-    u.searchParams.set('client_id', alexa.client_id);
-    u.searchParams.set('redirect_uri', alexa.redirect_uri);
+    u.searchParams.set('state', alexaNow.alexa_state);
+    u.searchParams.set('client_id', alexaNow.client_id);
+    u.searchParams.set('redirect_uri', alexaNow.redirect_uri);
 
     window.location.href = u.toString();
   });
 
-  // 3) Email/password submit
+  // Email/password submit
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
 
-    if (!alexa) {
+    const alexaNow = getAlexaParamsFromUrl();
+    if (!alexaNow) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
     }
@@ -417,9 +460,9 @@
         body: JSON.stringify({
           email: emailEl.value,
           password: passEl.value,
-          state: alexa.alexa_state,
-          client_id: alexa.client_id,
-          redirect_uri: alexa.redirect_uri
+          state: alexaNow.alexa_state,
+          client_id: alexaNow.client_id,
+          redirect_uri: alexaNow.redirect_uri
         })
       });
 
@@ -436,8 +479,12 @@
     }
   });
 
-  // 4) Guard only if we are not in Alexa context AND not returning from google with state in hash
-  if (!alexa && !hash['access_token']) {
+  // ✅ Updated Guard:
+  // Allow page to load if:
+  // - Alexa params exist OR
+  // - returning from google via hash access_token OR
+  // - returning from google via query code
+  if (!alexa && !hash['access_token'] && !q.get('code')) {
     showError('Invalid OAuth request. Please start linking from the Alexa app.');
     submitBtn.disabled = true;
     googleBtn.disabled = true;
