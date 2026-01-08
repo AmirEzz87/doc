@@ -29,73 +29,127 @@
 
     .brand { text-align: center; margin-bottom: 25px; }
     .brand img {
-      width: 160px; max-width: 70%; height: auto; display: inline-block;
-      user-select: none; -webkit-user-drag: none;
+      width: 160px;
+      max-width: 70%;
+      height: auto;
+      display: inline-block;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     h1 { color: #222; font-size: 22px; margin-bottom: 10px; text-align: center; }
-    p { color: #555; text-align: center; margin-bottom: 18px; font-size: 14px; }
+    p  { color: #555; text-align: center; margin-bottom: 24px; font-size: 14px; }
 
-    .input-group { margin-bottom: 20px; }
-    label { display: block; color: #333; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+    .input-group { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      color: #333;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
     input {
-      width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 10px;
-      font-size: 15px; transition: border-color 0.3s;
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: border-color 0.3s;
     }
     input:focus { outline: none; border-color: #0f5fa8; }
 
     button.primary-btn {
-      width: 100%; padding: 14px;
+      width: 100%;
+      padding: 14px;
       background: linear-gradient(135deg, #0f5fa8 0%, #4bb3e6 100%);
-      color: #fff; border: none; border-radius: 10px;
-      font-size: 16px; font-weight: 600; cursor: pointer;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    button.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4); }
+    button.primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(15, 95, 168, 0.4);
+    }
     button.primary-btn:active { transform: translateY(0); }
 
     .google-btn {
-      width: 100%; padding: 14px;
-      background: #ffffff; color: #222; border: 2px solid #e0e0e0; border-radius: 10px;
-      font-size: 16px; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%;
+      padding: 14px;
+      background: #ffffff;
+      color: #222;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
       margin-bottom: 14px;
     }
-    .google-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #cfcfcf; }
+    .google-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      border-color: #cfcfcf;
+    }
     .google-btn:active { transform: translateY(0); }
 
     .google-icon { width: 18px; height: 18px; display: inline-block; }
 
     .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 8px 0 18px; color: #777; font-size: 12px; user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0 18px;
+      color: #777;
+      font-size: 12px;
+      user-select: none;
     }
     .divider::before, .divider::after {
-      content: ""; flex: 1; height: 1px; background: #e9e9e9;
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #e9e9e9;
     }
 
     .error {
-      background: #fdeaea; color: #b00020;
-      padding: 12px; border-radius: 8px; margin-bottom: 16px;
-      font-size: 14px; display: none; text-align: center;
+      background: #fdeaea;
+      color: #b00020;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+      word-break: break-word;
     }
     .error.show { display: block; }
 
-    .loading { display: none; text-align: center; margin-top: 18px; }
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 18px;
+    }
     .loading.show { display: block; }
 
     .spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #0f5fa8;
       border-radius: 50%;
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 
@@ -138,230 +192,255 @@
 
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p style="margin-top: 10px; color: #555;">Authenticating…</p>
+      <p style="margin-top: 10px; color: #555;">Loading…</p>
     </div>
   </div>
 
-  <!-- Supabase JS (browser) -->
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  <script>
+    // ====== ENDPOINTS ======
+    const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
 
-    // ===== CONFIG =====
-    const SUPABASE_URL = "https://mvmvqycvorstsftcldzs.supabase.co";
+    // Email+password -> your existing edge function
+    const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
 
-    // IMPORTANT: put your real anon key here (safe for frontend)
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI";
+    // Google start -> redirects to Supabase auth
+    const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
 
-    const EDGE_EMAIL_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
-    const EDGE_GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
-    const EDGE_GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
+    // Google finish -> your edge function that creates Alexa auth code
+    const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
 
-    // MUST be EXACT and also whitelisted in Supabase Auth Redirect URLs
-    const LOGIN_PAGE_URL = "https://amirezz87.github.io/doc/";
-
-    const CTX_KEY = "alexa_oauth_ctx_v2";
-
-    // ===== ELEMENTS =====
-    const form = document.getElementById("loginForm");
-    const errorDiv = document.getElementById("error");
-    const loadingDiv = document.getElementById("loading");
-    const submitBtn = document.getElementById("submitBtn");
-    const googleBtn = document.getElementById("googleBtn");
+    // ====== UI ======
+    const form = document.getElementById('loginForm');
+    const errorDiv = document.getElementById('error');
+    const loadingDiv = document.getElementById('loading');
+    const submitBtn = document.getElementById('submitBtn');
+    const googleBtn = document.getElementById('googleBtn');
 
     function showError(msg) {
       errorDiv.textContent = msg;
-      errorDiv.classList.add("show");
+      errorDiv.classList.add('show');
     }
+
     function hideError() {
-      errorDiv.classList.remove("show");
+      errorDiv.classList.remove('show');
+      errorDiv.textContent = '';
     }
-    function setLoading(isLoading) {
+
+    function setLoading(isLoading, label = 'Loading…') {
+      const p = loadingDiv.querySelector('p');
+      if (p) p.textContent = label;
+
       if (isLoading) {
-        loadingDiv.classList.add("show");
+        loadingDiv.classList.add('show');
         submitBtn.disabled = true;
         googleBtn.disabled = true;
       } else {
-        loadingDiv.classList.remove("show");
+        loadingDiv.classList.remove('show');
         submitBtn.disabled = false;
         googleBtn.disabled = false;
       }
     }
 
-    // ===== SUPABASE CLIENT =====
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    // ===== HELPERS =====
-    function getAlexaParamsFromUrlOrStorage() {
-      const params = new URLSearchParams(window.location.search);
-      let state = params.get("state");
-      let clientId = params.get("client_id");
-      let redirectUri = params.get("redirect_uri");
-
-      // restore if missing
-      if (!state || !clientId || !redirectUri) {
-        try {
-          const saved = JSON.parse(sessionStorage.getItem(CTX_KEY) || "null");
-          if (saved) {
-            state = state || saved.state;
-            clientId = clientId || saved.clientId;
-            redirectUri = redirectUri || saved.redirectUri;
-          }
-        } catch (_) {}
+    // ====== HELPERS ======
+    function parseHashParams() {
+      const hash = window.location.hash || '';
+      if (!hash.startsWith('#')) return {};
+      const s = hash.substring(1);
+      const out = {};
+      for (const part of s.split('&')) {
+        const [k, v] = part.split('=');
+        if (!k) continue;
+        out[decodeURIComponent(k)] = decodeURIComponent(v || '');
       }
-
-      // save if present
-      if (state && clientId && redirectUri) {
-        sessionStorage.setItem(CTX_KEY, JSON.stringify({ state, clientId, redirectUri }));
-      }
-
-      return { state, clientId, redirectUri };
+      return out;
     }
 
-    function decodePackedState(packed) {
+    function safeAtob(b64) {
+      // handle URL-safe base64 variants too
       try {
-        const json = atob(packed);
-        return JSON.parse(json);
-      } catch (_) {
+        const fixed = b64.replace(/-/g, '+').replace(/_/g, '/');
+        // pad
+        const pad = fixed.length % 4 ? '='.repeat(4 - (fixed.length % 4)) : '';
+        return atob(fixed + pad);
+      } catch {
         return null;
       }
     }
 
-    // ===== GOOGLE RETURN HANDLER =====
-    async function handleGoogleReturnIfAny() {
+    function getAlexaParamsFromUrl() {
       const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      const packedState = params.get("state"); // this is your packed blob from oauth-google-start
 
-      // If no code -> not returning from Google
-      if (!code) return;
+      // Case A: direct Alexa open => has all 3
+      const directState = params.get('state');
+      const directClientId = params.get('client_id');
+      const directRedirectUri = params.get('redirect_uri');
 
-      // Restore alexa params from packed state (most reliable)
-      const decoded = decodePackedState(packedState || "");
-      if (decoded?.alexa_state && decoded?.client_id && decoded?.redirect_uri) {
-        sessionStorage.setItem(
-          CTX_KEY,
-          JSON.stringify({ state: decoded.alexa_state, clientId: decoded.client_id, redirectUri: decoded.redirect_uri })
-        );
+      if (directState && directClientId && directRedirectUri) {
+        return {
+          alexa_state: directState,
+          client_id: directClientId,
+          redirect_uri: directRedirectUri,
+          source: 'direct'
+        };
       }
 
-      const { state, clientId, redirectUri } = getAlexaParamsFromUrlOrStorage();
-      if (!state || !clientId || !redirectUri) {
-        showError("Invalid OAuth request. Please start linking from the Alexa app.");
-        return;
+      // Case B: returned from Supabase Google => query has packed "state" only
+      const packedState = params.get('state');
+      if (packedState) {
+        const decoded = safeAtob(packedState);
+        if (decoded) {
+          try {
+            const obj = JSON.parse(decoded);
+            if (obj && obj.alexa_state && obj.client_id && obj.redirect_uri) {
+              return {
+                alexa_state: obj.alexa_state,
+                client_id: obj.client_id,
+                redirect_uri: obj.redirect_uri,
+                source: 'packed'
+              };
+            }
+          } catch {}
+        }
       }
 
-      setLoading(true);
-      hideError();
+      return null;
+    }
 
-      try {
-        // Exchange code for Supabase session (THIS is the missing step)
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error || !data?.session?.access_token) {
-          throw new Error("Failed to create Supabase session from Google code.");
-        }
-
-        const accessToken = data.session.access_token;
-
-        // Now call your oauth-authorize-google (it requires Authorization Bearer token)
-        const res = await fetch(EDGE_GOOGLE_AUTHORIZE_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            state,
-            client_id: clientId,
-            redirect_uri: redirectUri,
-          }),
-        });
-
-        const out = await res.json();
-
-        if (res.ok && out.redirect_url) {
-          // Redirect back to Alexa
-          window.location.replace(out.redirect_url);
-          return;
-        }
-
-        throw new Error(out.error || "Google linking failed.");
-      } catch (e) {
-        setLoading(false);
-        showError(String(e.message || e));
+    function cleanUrlHash() {
+      // remove hash so we don't re-run on refresh
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     }
 
-    // Run this on load
-    await handleGoogleReturnIfAny();
+    // ====== MAIN FLOW ======
+    const alexa = getAlexaParamsFromUrl();
 
-    // ===== GOOGLE BUTTON =====
-    googleBtn.addEventListener("click", () => {
-      hideError();
-      const { state, clientId, redirectUri } = getAlexaParamsFromUrlOrStorage();
+    // 1) If we came back from Google, Supabase puts tokens in URL hash.
+    (async function handleGoogleReturnIfAny() {
+      const hash = parseHashParams();
+      const accessToken = hash['access_token']; // Supabase implicit flow
+      const error = hash['error'];
+      const errorDesc = hash['error_description'];
 
-      if (!state || !clientId || !redirectUri) {
-        showError("Invalid OAuth request. Please start linking from the Alexa app.");
+      if (error) {
+        showError(`Google sign-in failed: ${errorDesc || error}`);
+        cleanUrlHash();
         return;
       }
 
-      const u = new URL(EDGE_GOOGLE_START_URL);
-      u.searchParams.set("state", state);
-      u.searchParams.set("client_id", clientId);
-      u.searchParams.set("redirect_uri", redirectUri);
+      // If there is an access_token in hash, we must finish Google link:
+      if (accessToken) {
+        if (!alexa) {
+          showError('OAuth context missing after Google sign-in (state/client_id/redirect_uri).');
+          cleanUrlHash();
+          return;
+        }
 
-      // Your edge function uses env ALEXA_LOGIN_PAGE_URL, but passing this is harmless
-      // and helps you debug if you later use it.
-      u.searchParams.set("login_page", LOGIN_PAGE_URL);
+        setLoading(true, 'Finishing Google link…');
+        hideError();
+
+        try {
+          const res = await fetch(GOOGLE_AUTHORIZE_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              state: alexa.alexa_state,
+              client_id: alexa.client_id,
+              redirect_uri: alexa.redirect_uri
+            })
+          });
+
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            throw new Error(data.error || `Google authorize failed (${res.status})`);
+          }
+
+          if (!data.redirect_url) {
+            throw new Error('Missing redirect_url from oauth-authorize-google');
+          }
+
+          cleanUrlHash();
+          window.location.href = data.redirect_url;
+        } catch (e) {
+          setLoading(false);
+          showError(String(e?.message || e));
+          cleanUrlHash();
+        }
+      }
+    })();
+
+    // 2) Google button click => start google flow
+    googleBtn.addEventListener('click', () => {
+      hideError();
+
+      if (!alexa) {
+        showError('Invalid OAuth request. Please start linking from the Alexa app.');
+        return;
+      }
+
+      // Redirect (top-level navigation) to your oauth-google-start
+      const u = new URL(GOOGLE_START_URL);
+      u.searchParams.set('state', alexa.alexa_state);
+      u.searchParams.set('client_id', alexa.client_id);
+      u.searchParams.set('redirect_uri', alexa.redirect_uri);
 
       window.location.href = u.toString();
     });
 
-    // ===== EMAIL/PASSWORD SUBMIT =====
-    form.addEventListener("submit", async (e) => {
+    // 3) Email/password submit => existing flow
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
 
-      const { state, clientId, redirectUri } = getAlexaParamsFromUrlOrStorage();
-      if (!state || !clientId || !redirectUri) {
-        showError("Invalid OAuth request. Please start linking from the Alexa app.");
+      if (!alexa) {
+        showError('Invalid OAuth request. Please start linking from the Alexa app.');
         return;
       }
 
-      setLoading(true);
+      const emailEl = document.getElementById('email');
+      const passEl = document.getElementById('password');
+
+      if (!emailEl.value || !passEl.value) {
+        // let browser required validation show its message
+        return;
+      }
+
+      setLoading(true, 'Authenticating…');
 
       try {
-        const res = await fetch(EDGE_EMAIL_AUTHORIZE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch(EDGE_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: document.getElementById("email").value,
-            password: document.getElementById("password").value,
-            state,
-            client_id: clientId,
-            redirect_uri: redirectUri,
-          }),
+            email: emailEl.value,
+            password: passEl.value,
+            state: alexa.alexa_state,
+            client_id: alexa.client_id,
+            redirect_uri: alexa.redirect_uri
+          })
         });
 
-        const out = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-        if (res.ok && out.redirect_url) {
-          window.location.replace(out.redirect_url);
-          return;
+        if (res.ok && data.redirect_url) {
+          window.location.href = data.redirect_url;
+        } else {
+          throw new Error(data.error || 'Authentication failed');
         }
-
-        throw new Error(out.error || "Authentication failed.");
       } catch (err) {
         setLoading(false);
-        showError("Failed to connect to authentication server.");
+        showError('Failed to connect to authentication server.');
       }
     });
 
-    // ===== INITIAL GUARD =====
-    const ctx = getAlexaParamsFromUrlOrStorage();
-    if (!ctx.state || !ctx.clientId || !ctx.redirectUri) {
-      showError("Invalid OAuth request. Please start linking from the Alexa app.");
+    // 4) Guard / disable buttons if not opened from Alexa and not in packed google return
+    if (!alexa) {
+      showError('Invalid OAuth request. Please start linking from the Alexa app.');
       submitBtn.disabled = true;
       googleBtn.disabled = true;
     }
