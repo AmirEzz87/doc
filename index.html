@@ -370,7 +370,8 @@
     }
 
     // Now "state" query is our session_id
-    const sessionId = q.get('state');
+    const sessionId = q.get('session_id');
+
     if (!sessionId) {
       setLoading(false);
       showError('Missing session_id (state) after Google sign-in.');
