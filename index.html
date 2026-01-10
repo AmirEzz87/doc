@@ -28,6 +28,7 @@
     .brand img { width: 160px; max-width: 70%; height: auto; display: inline-block; }
     h1 { color: #222; font-size: 22px; margin-bottom: 10px; text-align: center; }
     p  { color: #555; text-align: center; margin-bottom: 24px; font-size: 14px; }
+
     .input-group { margin-bottom: 18px; }
     label { display: block; color: #333; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
     input {
@@ -180,10 +181,14 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI';
   // ===============================
 
+  // existing endpoints
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
   const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
   const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
-  const GET_SESSION_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-get`;
+
+  // session endpoints
+  const SESSION_CREATE_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-create`;
+  const SESSION_GET_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-get`;
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -237,13 +242,16 @@
   }
 
   async function getAlexaFromSessionId(sessionId) {
-    const res = await fetch(`${GET_SESSION_URL}?session_id=${encodeURIComponent(sessionId)}`);
+    const res = await fetch(`${SESSION_GET_URL}?session_id=${encodeURIComponent(sessionId)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Failed to load session');
+    if (!data.alexa_state || !data.client_id || !data.redirect_uri) {
+      throw new Error('Session is missing alexa_state/client_id/redirect_uri');
+    }
     return { alexa_state: data.alexa_state, client_id: data.client_id, redirect_uri: data.redirect_uri };
   }
 
-  // ✅ THIS IS THE IMPORTANT PART:
+  // ✅ This is the important helper (client-side)
   async function resolveAlexaContext() {
     const fromQuery = getAlexaFromQuery();
     if (fromQuery) return fromQuery;
@@ -270,7 +278,7 @@
   }
   debugDiv.textContent = buildDebug();
 
-  // ====== GOOGLE RETURN HANDLER (implicit hash OR pkce code) ======
+  // ====== Handle Google return (hash access_token OR PKCE code) ======
   (async function handleGoogleReturn() {
     const q = new URLSearchParams(window.location.search);
     const hash = parseHashParams();
@@ -282,10 +290,8 @@
       return;
     }
 
-    // Supabase can return access_token in hash (your current flow)
     let accessToken = hash['access_token'];
 
-    // If it returns PKCE ?code=..., exchange it (optional)
     const code = q.get('code');
     if (!accessToken && code) {
       setLoading(true, 'Completing Google sign-in…');
@@ -293,6 +299,7 @@
         const { data, error } = await sb.auth.exchangeCodeForSession(code);
         if (error) throw error;
         accessToken = data?.session?.access_token;
+        if (!accessToken) throw new Error('No access token returned');
       } catch (e) {
         setLoading(false);
         showError(`Google sign-in exchange failed: ${e?.message || e}`);
@@ -300,10 +307,9 @@
       }
     }
 
-    // If no token, not returning from google
-    if (!accessToken) return;
+    if (!accessToken) return; // not a google return
 
-    // ✅ Now load alexa params via query OR session_id
+    // ✅ load alexa context (query OR session_id)
     setLoading(true, 'Loading Alexa context…');
     let alexa;
     try {
@@ -320,7 +326,7 @@
       return;
     }
 
-    // ✅ Finish Google link
+    // ✅ Finish Google link by creating Alexa auth code and redirecting back to Alexa
     setLoading(true, 'Finishing Google link…');
     try {
       const res = await fetch(GOOGLE_AUTHORIZE_URL, {
@@ -347,29 +353,59 @@
     }
   })();
 
-  // ====== GOOGLE BUTTON CLICK ======
+  // ====== Google button click (THIS is what you were missing) ======
   googleBtn.addEventListener('click', async () => {
     hideError();
 
-    // Must be opened from Alexa (initial step) to create session
     const alexa = getAlexaFromQuery();
     if (!alexa) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
     }
 
-    // Your oauth-google-start should accept session_id already created on backend.
-    // If you are still using the "create session" flow, you should create it here.
-    // For now, start directly only if you already create session_id elsewhere.
-    showError('Your Google start requires session creation step. Use the version that creates session_id before redirect.');
+    setLoading(true, 'Starting Google sign-in…');
+
+    try {
+      // 1) Create login session in DB
+      const res = await fetch(SESSION_CREATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alexa_state: alexa.alexa_state,
+          client_id: alexa.client_id,
+          redirect_uri: alexa.redirect_uri
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.session_id) {
+        throw new Error(data.error || 'Failed to create login session');
+      }
+
+      // 2) Redirect to supabase/google (your edge function)
+      const u = new URL(GOOGLE_START_URL);
+      u.searchParams.set('session_id', data.session_id);
+
+      window.location.href = u.toString();
+    } catch (e) {
+      setLoading(false);
+      showError(e?.message || String(e));
+    }
   });
 
-  // ====== EMAIL/PASSWORD SUBMIT (still works normally) ======
+  // ====== Email/password submit (works both from Alexa URL and from session_id URL) ======
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
 
-    const alexa = await resolveAlexaContext().catch(() => null);
+    let alexa;
+    try {
+      alexa = await resolveAlexaContext();
+    } catch (e2) {
+      showError(e2?.message || String(e2));
+      return;
+    }
+
     if (!alexa) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
@@ -406,13 +442,8 @@
     }
   });
 
-  // ====== PAGE GUARD ======
-  // Allow page if:
-  // - has Alexa query params OR
-  // - has session_id OR
-  // - has google hash access_token OR
-  // - has pkce code
-  (async function guard() {
+  // ====== Guard ======
+  (function guard() {
     const q = new URLSearchParams(window.location.search);
     const hash = parseHashParams();
     const ok =
