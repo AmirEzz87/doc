@@ -26,11 +26,13 @@
     }
     .brand { text-align: center; margin-bottom: 25px; }
     .brand img { width: 160px; max-width: 70%; height: auto; display: inline-block; }
+
     h1 { color: #222; font-size: 22px; margin-bottom: 10px; text-align: center; }
     p  { color: #555; text-align: center; margin-bottom: 24px; font-size: 14px; }
 
     .input-group { margin-bottom: 18px; }
     label { display: block; color: #333; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+
     input {
       width: 100%;
       padding: 12px 16px;
@@ -176,17 +178,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // ====== CHANGE THESE ONLY ======
+  // ====== CHANGE THESE 2 VALUES ONLY ======
   const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI';
-  // ===============================
+  // =======================================
 
-  // existing endpoints
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
   const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
   const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
-
-  // session endpoints
   const SESSION_CREATE_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-create`;
   const SESSION_GET_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-get`;
 
@@ -251,7 +250,6 @@
     return { alexa_state: data.alexa_state, client_id: data.client_id, redirect_uri: data.redirect_uri };
   }
 
-  // ✅ This is the important helper (client-side)
   async function resolveAlexaContext() {
     const fromQuery = getAlexaFromQuery();
     if (fromQuery) return fromQuery;
@@ -278,7 +276,7 @@
   }
   debugDiv.textContent = buildDebug();
 
-  // ====== Handle Google return (hash access_token OR PKCE code) ======
+  // Handle Google return (implicit hash token OR pkce code)
   (async function handleGoogleReturn() {
     const q = new URLSearchParams(window.location.search);
     const hash = parseHashParams();
@@ -307,9 +305,8 @@
       }
     }
 
-    if (!accessToken) return; // not a google return
+    if (!accessToken) return;
 
-    // ✅ load alexa context (query OR session_id)
     setLoading(true, 'Loading Alexa context…');
     let alexa;
     try {
@@ -326,7 +323,6 @@
       return;
     }
 
-    // ✅ Finish Google link by creating Alexa auth code and redirecting back to Alexa
     setLoading(true, 'Finishing Google link…');
     try {
       const res = await fetch(GOOGLE_AUTHORIZE_URL, {
@@ -353,7 +349,7 @@
     }
   })();
 
-  // ====== Google button click (THIS is what you were missing) ======
+  // Google button click -> create session -> redirect to oauth-google-start?session_id=...
   googleBtn.addEventListener('click', async () => {
     hideError();
 
@@ -366,7 +362,6 @@
     setLoading(true, 'Starting Google sign-in…');
 
     try {
-      // 1) Create login session in DB
       const res = await fetch(SESSION_CREATE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -378,11 +373,8 @@
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.session_id) {
-        throw new Error(data.error || 'Failed to create login session');
-      }
+      if (!res.ok || !data.session_id) throw new Error(data.error || 'Failed to create login session');
 
-      // 2) Redirect to supabase/google (your edge function)
       const u = new URL(GOOGLE_START_URL);
       u.searchParams.set('session_id', data.session_id);
 
@@ -393,7 +385,7 @@
     }
   });
 
-  // ====== Email/password submit (works both from Alexa URL and from session_id URL) ======
+  // Email/password submit (works from Alexa query OR session_id)
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
@@ -413,6 +405,7 @@
 
     const emailEl = document.getElementById('email');
     const passEl = document.getElementById('password');
+
     if (!emailEl.value || !passEl.value) return;
 
     setLoading(true, 'Authenticating…');
@@ -442,7 +435,7 @@
     }
   });
 
-  // ====== Guard ======
+  // Guard
   (function guard() {
     const q = new URLSearchParams(window.location.search);
     const hash = parseHashParams();
