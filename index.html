@@ -150,24 +150,33 @@
       margin: 0 auto;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Optional small debug box (hidden by default) */
+    .debug {
+      display: none;
+      font-size: 12px;
+      background: #f6f6f6;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #333;
+    }
   </style>
 </head>
 
 <body>
-  
   <div class="container">
     <div class="brand">
-      <img src="hbot-logo.png" alt="HBOT Logo" />
+      <img id="logo" src="hbot-logo.png" alt="HBOT Logo" />
     </div>
-
-    <div id="debug"
-     style="font-size:12px;background:#f6f6f6;border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:12px;white-space:pre-wrap;word-break:break-word;">
-    </div>
-
 
     <h1>Link Your Smart Home</h1>
     <p>Sign in to connect your HBOT account with Alexa</p>
 
+    <div id="debug" class="debug"></div>
     <div id="error" class="error"></div>
 
     <form id="loginForm">
@@ -202,25 +211,29 @@
     </div>
   </div>
 
-  <!-- ✅ Step 1: Supabase JS CDN -->
+  <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // ====== CHANGE THESE 2 VALUES ONLY ======
+  // =======================
+  // CHANGE THESE ONLY
+  // =======================
   const SUPABASE_URL = 'https://mvmvqycvorstsftcldzs.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12bXZxeWN2b3JzdHNmdGNsZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDczNTQsImV4cCI6MjA3MDU4MzM1NH0.gA744wsXronSyRXHCS60DVcVqJ3_y0MgkqEhLsFxYDI';
-  // =======================================
+  // Optional:
+  const LOGO_URL = 'hbot-logo.png';
+  // =======================
 
-  // Email+password -> your existing edge function
+  // Existing endpoints (email/password + google finish)
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize`;
-
-  // Google start -> redirects to Supabase auth
-  const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
-
-  // Google finish -> edge function that creates Alexa auth code
   const GOOGLE_AUTHORIZE_URL = `${SUPABASE_URL}/functions/v1/oauth-authorize-google`;
 
-  // ✅ Supabase client (used ONLY to exchange ?code=... into a session)
+  // New endpoints (server-side session approach)
+  const CREATE_SESSION_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-create`;
+  const GET_SESSION_URL = `${SUPABASE_URL}/functions/v1/oauth-login-session-get`;
+  const GOOGLE_START_URL = `${SUPABASE_URL}/functions/v1/oauth-google-start`;
+
+  // Supabase client used ONLY to exchange ?code=... into a session
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: false,
@@ -235,17 +248,20 @@
   const loadingDiv = document.getElementById('loading');
   const submitBtn = document.getElementById('submitBtn');
   const googleBtn = document.getElementById('googleBtn');
+  const debugDiv = document.getElementById('debug');
+
+  // Set logo
+  const logo = document.getElementById('logo');
+  if (logo && LOGO_URL) logo.src = LOGO_URL;
 
   function showError(msg) {
     errorDiv.textContent = msg;
     errorDiv.classList.add('show');
   }
-
   function hideError() {
     errorDiv.classList.remove('show');
     errorDiv.textContent = '';
   }
-
   function setLoading(isLoading, label = 'Loading…') {
     const p = loadingDiv.querySelector('p');
     if (p) p.textContent = label;
@@ -274,142 +290,104 @@
     }
     return out;
   }
-//-------------------debug----
 
-  function showDebug() {
-  const q = new URLSearchParams(window.location.search);
-  const h = parseHashParams();
-  const dbg = document.getElementById('debug');
-  if (!dbg) return;
-
-  dbg.style.display = 'block';
-  dbg.textContent =
-    "FULL URL:\n" + window.location.href + "\n\n" +
-    "QUERY state=" + (q.get('state') || '') + "\n" +
-    "QUERY client_id=" + (q.get('client_id') || '') + "\n" +
-    "QUERY redirect_uri=" + (q.get('redirect_uri') || '') + "\n\n" +
-    "HASH state=" + (h['state'] || '') + "\n" +
-    "HASH access_token=" + (h['access_token'] || '') + "\n";
-}
-
-showDebug();
-
-  function safeAtob(b64) {
-    try {
-      const fixed = b64.replace(/-/g, '+').replace(/_/g, '/');
-      const pad = fixed.length % 4 ? '='.repeat(4 - (fixed.length % 4)) : '';
-      return atob(fixed + pad);
-    } catch {
-      return null;
-    }
+  function showDebugBox(text) {
+    if (!debugDiv) return;
+    debugDiv.style.display = 'block';
+    debugDiv.textContent = text;
   }
 
-  // Supabase may return Alexa "state" in QUERY OR in HASH.
-  function getAlexaParamsFromUrl() {
+  function getAlexaParamsFromQuery() {
     const q = new URLSearchParams(window.location.search);
-    const h = parseHashParams();
+    const state = q.get('state');
+    const client_id = q.get('client_id');
+    const redirect_uri = q.get('redirect_uri');
 
-    // Case A: direct Alexa open => has all 3 in query
-    const directState = q.get('state');
-    const directClientId = q.get('client_id');
-    const directRedirectUri = q.get('redirect_uri');
-
-    if (directState && directClientId && directRedirectUri) {
-      return {
-        alexa_state: directState,
-        client_id: directClientId,
-        redirect_uri: directRedirectUri,
-        source: 'direct_query'
-      };
+    if (state && client_id && redirect_uri) {
+      return { alexa_state: state, client_id, redirect_uri };
     }
-
-    // Case B: returned from Supabase Google => packed "state" may be in query OR hash
-    const packedState = q.get('state') || h['state'];
-
-    if (packedState) {
-      const decoded = safeAtob(packedState);
-      if (decoded) {
-        try {
-          const obj = JSON.parse(decoded);
-          if (obj && obj.alexa_state && obj.client_id && obj.redirect_uri) {
-            return {
-              alexa_state: obj.alexa_state,
-              client_id: obj.client_id,
-              redirect_uri: obj.redirect_uri,
-              source: 'packed_state'
-            };
-          }
-        } catch {}
-      }
-    }
-
     return null;
   }
 
-  function cleanUrlHash() {
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname + window.location.search);
+  async function loadAlexaParamsFromSessionId(sessionId) {
+    const res = await fetch(`${GET_SESSION_URL}?session_id=${encodeURIComponent(sessionId)}`, {
+      method: 'GET'
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to load Alexa session');
+    if (!data.alexa_state || !data.client_id || !data.redirect_uri) {
+      throw new Error('Session is missing Alexa params');
     }
+    return { alexa_state: data.alexa_state, client_id: data.client_id, redirect_uri: data.redirect_uri };
   }
 
-  // ====== MAIN ======
-  const alexa = getAlexaParamsFromUrl();
-  const hash = parseHashParams();
-  const q = new URLSearchParams(window.location.search);
+  function buildDebugText() {
+    const q = new URLSearchParams(window.location.search);
+    const h = parseHashParams();
+    return (
+      "FULL URL:\n" + window.location.href + "\n\n" +
+      "QUERY state=" + (q.get('state') || '') + "\n" +
+      "QUERY client_id=" + (q.get('client_id') || '') + "\n" +
+      "QUERY redirect_uri=" + (q.get('redirect_uri') || '') + "\n" +
+      "QUERY code=" + (q.get('code') || '') + "\n\n" +
+      "HASH access_token=" + (h['access_token'] || '') + "\n"
+    );
+  }
 
-  // ✅ Google return handler supports BOTH:
-  // - implicit: #access_token=...
-  // - pkce: ?code=...
-  (async function handleGoogleReturnIfAny() {
-    // errors may come in query or hash
+  // Show debug (keep it ON while testing; hide later)
+  showDebugBox(buildDebugText());
+
+  // ====== GOOGLE RETURN HANDLER ======
+  (async function handleGoogleReturn() {
+    const q = new URLSearchParams(window.location.search);
+    const hash = parseHashParams();
+
+    // Supabase may send errors in query
     const err = q.get('error') || hash['error'];
     const errDesc = q.get('error_description') || hash['error_description'];
-
     if (err) {
       showError(`Google sign-in failed: ${errDesc || err}`);
-      cleanUrlHash();
       return;
     }
 
-    // 1) Old implicit flow (access_token in hash)
-    let accessToken = hash['access_token'];
-
-    // 2) PKCE flow (code in query)
+    // If Supabase returned ?code=... (PKCE), exchange it
     const code = q.get('code');
-    if (!accessToken && code) {
-      setLoading(true, 'Completing Google sign-in…');
-      hideError();
-      try {
-        const { data, error } = await sb.auth.exchangeCodeForSession(code);
-        if (error) throw error;
+    if (!code) return; // not returning from google
 
-        accessToken = data?.session?.access_token;
-        if (!accessToken) throw new Error('No access token returned from Supabase session.');
-
-        // Clean URL (remove ?code=...) to keep parsing stable
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (e) {
-        setLoading(false);
-        showError(`Google sign-in exchange failed: ${e?.message || e}`);
-        return;
-      }
-    }
-
-    // If no access token => nothing to finish
-    if (!accessToken) return;
-
-    // Now we must have Alexa params (packed_state or direct query)
-    const alexaAfter = getAlexaParamsFromUrl();
-    if (!alexaAfter) {
-      setLoading(false);
-      showError('OAuth context missing after Google sign-in (state/client_id/redirect_uri).');
-      cleanUrlHash();
-      return;
-    }
-
-    setLoading(true, 'Finishing Google link…');
+    setLoading(true, 'Completing Google sign-in…');
     hideError();
 
+    let accessToken = null;
+    try {
+      const { data, error } = await sb.auth.exchangeCodeForSession(code);
+      if (error) throw error;
+      accessToken = data?.session?.access_token;
+      if (!accessToken) throw new Error('No access token returned from Supabase session');
+    } catch (e) {
+      setLoading(false);
+      showError(`Google sign-in exchange failed: ${e?.message || e}`);
+      return;
+    }
+
+    // Now "state" query is our session_id
+    const sessionId = q.get('state');
+    if (!sessionId) {
+      setLoading(false);
+      showError('Missing session_id (state) after Google sign-in.');
+      return;
+    }
+
+    let alexaParams;
+    try {
+      alexaParams = await loadAlexaParamsFromSessionId(sessionId);
+    } catch (e) {
+      setLoading(false);
+      showError(e?.message || String(e));
+      return;
+    }
+
+    // Call your existing edge function to create Alexa auth code
+    setLoading(true, 'Finishing Google link…');
     try {
       const res = await fetch(GOOGLE_AUTHORIZE_URL, {
         method: 'POST',
@@ -418,54 +396,70 @@ showDebug();
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          state: alexaAfter.alexa_state,
-          client_id: alexaAfter.client_id,
-          redirect_uri: alexaAfter.redirect_uri
+          state: alexaParams.alexa_state,
+          client_id: alexaParams.client_id,
+          redirect_uri: alexaParams.redirect_uri
         })
       });
 
       const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Google authorize failed (${res.status})`);
+      if (!data.redirect_url) throw new Error('Missing redirect_url from oauth-authorize-google');
 
-      if (!res.ok) {
-        throw new Error(data.error || `Google authorize failed (${res.status})`);
-      }
-      if (!data.redirect_url) {
-        throw new Error('Missing redirect_url from oauth-authorize-google');
-      }
-
-      cleanUrlHash();
+      // Redirect back to Alexa
       window.location.href = data.redirect_url;
     } catch (e) {
       setLoading(false);
-      showError(String(e?.message || e));
-      cleanUrlHash();
+      showError(e?.message || String(e));
     }
   })();
 
-  // Google button click -> start google flow
-  googleBtn.addEventListener('click', () => {
+  // ====== GOOGLE BUTTON CLICK ======
+  googleBtn.addEventListener('click', async () => {
     hideError();
 
-    const alexaNow = getAlexaParamsFromUrl();
+    // Must be opened from Alexa with proper query params
+    const alexaNow = getAlexaParamsFromQuery();
     if (!alexaNow) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
     }
 
-    const u = new URL(GOOGLE_START_URL);
-    u.searchParams.set('state', alexaNow.alexa_state);
-    u.searchParams.set('client_id', alexaNow.client_id);
-    u.searchParams.set('redirect_uri', alexaNow.redirect_uri);
+    setLoading(true, 'Starting Google sign-in…');
 
-    window.location.href = u.toString();
+    try {
+      // Create server-side session to preserve Alexa params
+      const res = await fetch(CREATE_SESSION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alexa_state: alexaNow.alexa_state,
+          client_id: alexaNow.client_id,
+          redirect_uri: alexaNow.redirect_uri
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.session_id) {
+        throw new Error(data.error || 'Failed to create login session');
+      }
+
+      // Redirect to oauth-google-start with session_id (NOT Alexa state)
+      const u = new URL(GOOGLE_START_URL);
+      u.searchParams.set('session_id', data.session_id);
+      window.location.href = u.toString();
+    } catch (e) {
+      setLoading(false);
+      showError(e?.message || String(e));
+    }
   });
 
-  // Email/password submit
+  // ====== EMAIL/PASSWORD SUBMIT (UNCHANGED WORKING FLOW) ======
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
 
-    const alexaNow = getAlexaParamsFromUrl();
+    const alexaNow = getAlexaParamsFromQuery();
     if (!alexaNow) {
       showError('Invalid OAuth request. Please start linking from the Alexa app.');
       return;
@@ -492,7 +486,6 @@ showDebug();
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (res.ok && data.redirect_url) {
         window.location.href = data.redirect_url;
       } else {
@@ -500,16 +493,16 @@ showDebug();
       }
     } catch (err) {
       setLoading(false);
-      showError('Failed to connect to authentication server.');
+      showError(err?.message || 'Failed to connect to authentication server.');
     }
   });
 
-  // ✅ Updated Guard:
-  // Allow page to load if:
-  // - Alexa params exist OR
-  // - returning from google via hash access_token OR
-  // - returning from google via query code
-  if (!alexa && !hash['access_token'] && !q.get('code')) {
+  // ====== GUARD ======
+  // Allow if:
+  // - direct Alexa query params exist OR
+  // - returning from Google with ?code=...
+  const q = new URLSearchParams(window.location.search);
+  if (!getAlexaParamsFromQuery() && !q.get('code')) {
     showError('Invalid OAuth request. Please start linking from the Alexa app.');
     submitBtn.disabled = true;
     googleBtn.disabled = true;
